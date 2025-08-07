@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Cairo } from "next/font/google";
+import { Noto_Sans } from "next/font/google";
 import "./globals.css";
 
 
-const cairo = Cairo({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"], 
-  display: "swap",
-});
 
+const NotoSans =  Noto_Sans ({
+  subsets: ["latin"],
+  variable: "--font-noto-sans",
+  weight: ['200' , '300', '400', '700'],
+
+})
 
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={cairo.className}
+        className={NotoSans.className}
       >
         {children}
       </body>

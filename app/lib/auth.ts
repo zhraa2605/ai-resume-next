@@ -45,6 +45,7 @@ type logInInput = {
 export const signUp = async ({ email, password, name }: SignUpInput) => {
   try {
     const user = await account.create(ID.unique(), email, password, name);
+    console.log("user created")
     await databases.createDocument(DB_ID, USERS_COLLECTION_ID, ID.unique(), {
       name,
       email,
@@ -63,6 +64,7 @@ export const logIn = async ({email , password} : logInInput) => {
       email,
       password
     )
+    console.log("user logged in function")
     return user;
     } catch (error) {
       throw error;

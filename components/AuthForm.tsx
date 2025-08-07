@@ -1,13 +1,12 @@
-"use client";
+"use client"
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -25,25 +24,31 @@ import { useForm } from "react-hook-form";
 import { BotMessageSquare, Lock, Mail, User } from "lucide-react";
 import Link from "next/link";
 import { logIn, signUp } from "@/app/lib/auth";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type AuthType = "sign-in" | "sign-up";
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-  email: z.string(),
-  password: z.string().min(8, {
-    message: "Password must be at least 8 characters.",
-  }),
-});
+
+const authFormSchema = (formType: AuthType) => {
+  return z.object({
+    email: z.string().email(),
+    password: z.string().min(8),
+    name:
+      formType === "sign-up"
+        ? z.string().min(2).max(50)
+        : z.string().optional(),
+  });
+
+};
 
 const AuthForm = ({ type }: { type: AuthType }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
+
+
+  const formSchema = authFormSchema(type);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,6 +58,13 @@ const AuthForm = ({ type }: { type: AuthType }) => {
       password: "",
     },
   });
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return null;
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -99,7 +111,7 @@ const AuthForm = ({ type }: { type: AuthType }) => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-peach-dark-200 font-semibold">
+                      <FormLabel>
                         Full Name
                       </FormLabel>
                       <FormControl>
@@ -124,7 +136,7 @@ const AuthForm = ({ type }: { type: AuthType }) => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-peach-dark-200 font-semibold">Email</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-peach-dark-200 size-4" />
@@ -146,7 +158,7 @@ const AuthForm = ({ type }: { type: AuthType }) => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-peach-dark-200 font-semibold">
+                    <FormLabel >
                       Password
                     </FormLabel>
                     <FormControl>
@@ -171,7 +183,7 @@ const AuthForm = ({ type }: { type: AuthType }) => {
 
               <Button
                 type="submit"
-                className="w-full bg-peach-dark-200 text-warm-gray hover:bg-peach-dark"
+                className=" w-full bg-peach-dark-200 text-warm-gray hover:bg-peach-dark rounded-4xl p-4"
                 disabled={isLoading}
               >
                 {isLoading
