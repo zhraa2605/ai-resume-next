@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { formatSize } from "@/lib/utils";
 import Image from "next/image";
-import { CloudUpload, X } from "lucide-react";
+import { CloudUpload, File, X } from "lucide-react";
 
 interface FileUploaderProps {
   onFileSelect?: (file: File | null) => void;
@@ -50,10 +50,17 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
               className="flex items-center space-x-4 p-4 backdrop-blur-sm rounded-xl border border-soft-gray/50 shadow-sm"
               onClick={(e) => e.stopPropagation()}
             >
+             <Image 
+             src="/icons/pdf.svg"
+             width={30}
+             height={30}
+             alt="icon"
+             />
               
               {/* File details */}
               <div className="flex-1 min-w-0">
-                <p className="text-base font-semibold text-slate-blue truncate max-w-xs">
+
+                <p className="text-base font-semibold text-slate-blue max-w-xs">
                   {file.name}
                 </p>
                 <p className="text-sm text-slate-blue/70">

@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import {
@@ -25,14 +24,15 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import FileUploader from "./UplaodFile";
+import { extractPdfText } from "@/app/lib/extractPdfText";
+import { getResumeFeedback } from "@/app/lib/gemini";
 
 const formSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
   jobTitle: z.string().min(1, "Job title is required"),
   description: z.string().min(1, "Description is required"),
-  file: z
-    .any()
-    .refine((file) => file?.length === 1, "File is required"),
+  file: z.instanceof(File, { message: "File is required" })
+
 });
 
 type UploadDialogProps = {
@@ -52,13 +52,49 @@ const UploadDialog = ({ open, onOpenChange }: UploadDialogProps) => {
   });
     const [file, setFile] = useState<File | null>(null);
  const handleFileSelect = (file: File | null) => {
+   form.setValue("file", file);  // update react-hook-form's value
     setFile(file);
   };
 
-  const onSubmit = (values: any) => {
-    console.log("Submitted values:", values);
-    // Handle upload logic here
+async function onSubmit(values: {
+  file: File;
+  companyName: string;
+  jobTitle: string;
+  jobDescription?: string;
+}) {
+  try {
+    // 1. Extract text from the PDF file
+    const pdfText = await extractPdfText(values.file);
+    console.log("Extracted PDF text:", pdfText.slice(0, 200)); // preview first 200 chars
+
+    // 2. Define your expected feedback format (adjust as needed)
+    const AIResponseFormat = `{
+      "rating": number,
+      "strengths": string[],
+      "weaknesses": string[],
+      "suggestions": string[]
+    }`;
+
+
+    // 3. Send extracted text + job info to Gemini
+    const feedback = await getResumeFeedback({
+      pdfText,
+      jobTitle: values.jobTitle,
+      jobDescription: values.jobDescription || "",
+      AIResponseFormat,
+    });
+
+    // 4. Log or process the feedback
+    console.log("Gemini feedback:", feedback);
+
+
+    // TODO: You can save feedback to your DB here or update UI
+
+  } catch (error) {
+    console.error("Error during resume analysis:", error);
+  }finally {
     onOpenChange(false); // close dialog after submit
+  }
   };
 
   return (
@@ -80,7 +116,7 @@ const UploadDialog = ({ open, onOpenChange }: UploadDialogProps) => {
                 <FormItem>
                   <FormLabel>Company Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. OpenAI" {...field} />
+                    <Input placeholder="Enter Company Name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -94,7 +130,7 @@ const UploadDialog = ({ open, onOpenChange }: UploadDialogProps) => {
                 <FormItem>
                   <FormLabel>Job Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. AI Researcher" {...field} />
+                    <Input placeholder="Enter your job title" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
